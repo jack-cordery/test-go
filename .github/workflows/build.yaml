@@ -1,0 +1,65 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: products # Replace with your repository name
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::443370685643:role/github-actions-ecr-push
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Tag and push images
+        if: success()  # Only run if Trivy scan passes
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # Tag based on branch
+          if [[ ${{ github.ref }} == 'refs/heads/dev' ]]; then
+            docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:dev
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:dev
+          elif [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:prod
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:prod
+          fi
