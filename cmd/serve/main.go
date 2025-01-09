@@ -47,8 +47,8 @@ func getStatus() http.HandlerFunc {
 func main() {
 	 mux := http.NewServeMux()
 
-	 mux.HandleFunc("GET /status", getStatus())
-	 mux.HandleFunc("GET /healthz", healthz())
+	 mux.HandleFunc("GET /go/status", getStatus())
+	 mux.HandleFunc("GET /go/healthz", healthz())
 
 	 err := http.ListenAndServe(":8001", mux)
 	if err != nil {
