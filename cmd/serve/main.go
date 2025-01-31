@@ -62,16 +62,19 @@ func createUser(queries *db.Queries, ctx context.Context) http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
+			log.Printf("ERROR: %v - Method: %s, URL: %s", err, r.Method, r.URL.Path)
 			http.Error(w, "Oh no", http.StatusInternalServerError)
 			return
 		}
 		_, err = queries.CreateUser(ctx, req.Email)
 		if err != nil {
+			log.Printf("ERROR: %v - Method: %s, URL: %s", err, r.Method, r.URL.Path)
 			http.Error(w, "Oh no", http.StatusInternalServerError)
 			return
 		}
 		err = json.NewEncoder(w).Encode(http.StatusOK)
 		if err != nil {
+			log.Printf("ERROR: %v - Method: %s, URL: %s", err, r.Method, r.URL.Path)
 			http.Error(w, "Oh no", http.StatusInternalServerError)
 			return
 		}
@@ -84,16 +87,19 @@ func getUser(queries *db.Queries, ctx context.Context) http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
+			log.Printf("ERROR: %v - Method: %s, URL: %s", err, r.Method, r.URL.Path)
 			http.Error(w, "Oh no", http.StatusInternalServerError)
 			return
 		}
 		user, err := queries.GetUserByEmail(ctx, req.Email)
 		if err != nil {
+			log.Printf("ERROR: %v - Method: %s, URL: %s", err, r.Method, r.URL.Path)
 			http.Error(w, "Oh no", http.StatusInternalServerError)
 			return
 		}
 		err = json.NewEncoder(w).Encode(user)
 		if err != nil {
+			log.Printf("ERROR: %v - Method: %s, URL: %s", err, r.Method, r.URL.Path)
 			http.Error(w, "Oh no", http.StatusInternalServerError)
 			return
 		}
