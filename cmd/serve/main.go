@@ -38,15 +38,14 @@ func healthz() http.HandlerFunc {
 			http.Error(w, "Something went wrong", http.StatusInternalServerError)
 			return
 
+		}
 	}
-}
 }
 
 func getStatus() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		err := json.NewEncoder(w).Encode(StatusResponse{
-			OldMessage: "Who?",
+		err := json.NewEncoder(w).Encode(StatusResponse{OldMessage: "Who?",
 			NewMessage: "When?",
 		})
 		if err != nil {
@@ -106,7 +105,6 @@ func getUser(queries *db.Queries, ctx context.Context) http.HandlerFunc {
 	}
 }
 
-
 func main() {
 	ctx := context.Background()
 
@@ -131,3 +129,4 @@ func main() {
 	defer conn.Close(ctx)
 
 }
+
